@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=FluxDesk
+Comment=AI-Native Cross-Platform Desktop Assistant
+Exec=fluxdesk
+Icon=fluxdesk
+Categories=Utility;Office;
+Terminal=false
+StartupNotify=true

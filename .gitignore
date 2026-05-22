@@ -1,0 +1,19 @@
+/build/
+/dist/
+*.db
+*.exe
+*.msi
+*.zip
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Temp
+tmp/
+temp/

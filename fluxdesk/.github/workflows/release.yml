@@ -1,0 +1,157 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  discussions: write
+
+jobs:
+  build-python-sidecar:
+    name: Build Python Sidecar (${{ matrix.target }})
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r server/requirements.txt
+
+      - name: Build with PyInstaller
+        run: pyinstaller --clean build.spec
+        working-directory: server
+
+      - name: Rename for Tauri
+        shell: bash
+        run: |
+          mkdir -p src-tauri/bin
+          SUFFIX=""
+          [[ "${{ matrix.target }}" == *windows* ]] && SUFFIX=".exe"
+          mv server/dist/fluxdesk-ai$SUFFIX src-tauri/bin/fluxdesk-ai-${{ matrix.target }}$SUFFIX
+
+      - name: Upload sidecar binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: sidecar-${{ matrix.target }}
+          path: src-tauri/bin/fluxdesk-ai-${{ matrix.target }}*
+          retention-days: 1
+
+  build-tauri:
+    name: Build Tauri (${{ matrix.target }})
+    needs: build-python-sidecar
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bundles: appimage,deb
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bundles: dmg
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: msi,nsis
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download sidecar binary
+        uses: actions/download-artifact@v4
+        with:
+          name: sidecar-${{ matrix.target }}
+          path: src-tauri/bin/
+
+      - name: Ensure sidecar is executable
+        shell: bash
+        run: chmod +x src-tauri/bin/fluxdesk-ai-${{ matrix.target }}*
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        run: cargo tauri build --bundles ${{ matrix.bundles }}
+        working-directory: src-tauri
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fluxdesk-${{ matrix.target }}
+          path: src-tauri/target/release/bundle/*/
+          retention-days: 7
+
+  create-release:
+    name: Create Release
+    needs: build-tauri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate release body
+        run: |
+          echo "## FluxDesk ${{ github.ref_name }}" > release_body.md
+          echo "" >> release_body.md
+          echo "### 安装包" >> release_body.md
+          echo "" >> release_body.md
+          find artifacts -type f \( -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.msi" -o -name "*.exe" \) | while read f; do
+            name=$(basename "$f")
+            size=$(du -h "$f" | cut -f1)
+            echo "- \`$name\` ($size)" >> release_body.md
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_body.md
+          files: |
+            artifacts/fluxdesk-*/*.dmg
+            artifacts/fluxdesk-*/*.AppImage
+            artifacts/fluxdesk-*/*.deb
+            artifacts/fluxdesk-*/*.msi
+            artifacts/fluxdesk-*/*.exe

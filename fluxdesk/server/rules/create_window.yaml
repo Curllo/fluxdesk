@@ -1,0 +1,39 @@
+rules:
+  - name: "create_pomodoro"
+    priority: 100
+    patterns:
+      - regex: '(?:打开|创建|来个|开始).{0,12}(?:番茄钟|番茄|pomodoro)'
+      - regex: '(?:pomo|番茄).{0,6}(\d+).{0,6}(?:分钟|min)'
+    action:
+      type: "create_tool"
+      params:
+        tool_type: "pomodoro"
+        config:
+          duration: "{{ $1 | default: 25 }}"
+
+  - name: "create_todo"
+    priority: 90
+    patterns:
+      - regex: '(?:记下|添加|创建).{0,8}(?:待办|todo|任务)'
+    action:
+      type: "create_tool"
+      params:
+        tool_type: "todo"
+
+  - name: "create_note"
+    priority: 85
+    patterns:
+      - regex: '(?:新建|创建|打开).{0,8}(?:笔记|note)'
+    action:
+      type: "create_tool"
+      params:
+        tool_type: "note"
+
+  - name: "create_calendar"
+    priority: 80
+    patterns:
+      - regex: '(?:打开|查看).{0,8}(?:日历|calendar|日程)'
+    action:
+      type: "create_tool"
+      params:
+        tool_type: "calendar"

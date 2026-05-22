@@ -1,0 +1,18 @@
+rules:
+  - name: "greeting"
+    priority: 10
+    patterns:
+      - regex: '(?:^|\n|用户:\s*)(你好|您好|hello|hi|hey)\s*$'
+    action:
+      type: "reply"
+      params:
+        message: "你好！我是 FluxDesk 智能助手，有什么可以帮您的？"
+
+  - name: "help"
+    priority: 10
+    patterns:
+      - regex: '(?:帮助|help|怎么用|能做什么)'
+    action:
+      type: "reply"
+      params:
+        message: "您可以尝试：\n• 创建一个25分钟的番茄钟\n• 添加待办事项\n• 新建笔记\n• 查看日历"

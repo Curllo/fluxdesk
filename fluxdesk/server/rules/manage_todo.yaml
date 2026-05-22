@@ -1,0 +1,18 @@
+rules:
+  - name: "complete_todo"
+    priority: 95
+    patterns:
+      - regex: '(?:完成|做完|搞定).{0,8}(?:待办|todo|任务)'
+    action:
+      type: "manage_todo"
+      params:
+        action: "complete"
+
+  - name: "list_todos"
+    priority: 70
+    patterns:
+      - regex: '(?:列出|查看|显示).{0,8}(?:所有|全部)?(?:待办|todo|任务)'
+    action:
+      type: "manage_todo"
+      params:
+        action: "list"

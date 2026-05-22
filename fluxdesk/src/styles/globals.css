@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #2C2C2C;
+  --color-paper: #FAF9F7;
+  --color-dai: #4A5F6F;
+  --color-dai-hover: #3D4F5C;
+  --color-mist: rgba(255, 255, 255, 0.72);
+  --color-mist-dark: rgba(30, 30, 30, 0.72);
+  --color-bg-primary: #FAF9F7;
+  --color-bg-secondary: #F2F1EF;
+  --color-bg-glass: rgba(255, 255, 255, 0.72);
+  --color-text-primary: #2C2C2C;
+  --color-text-secondary: #6B6B6B;
+  --color-border: #E5E5E5;
+  --color-success: #4ADE80;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+/* ── Smooth theme transition ─────────────────── */
+html, body, .dark .bg-bg-primary, .dark .bg-bg-secondary,
+.dark .text-text-primary, .dark .text-text-secondary {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+input, textarea, button, svg, .group, .transition-all {
+  transition-property: all;
+}
+
+/* ── Disable animations ──────────────────────── */
+html.no-animations *,
+html.no-animations *::before,
+html.no-animations *::after {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
+/* ── Disable glassmorphism ───────────────────── */
+html.no-glassmorphism .backdrop-blur-sm,
+html.no-glassmorphism .backdrop-blur-md,
+html.no-glassmorphism .backdrop-blur-lg,
+html.no-glassmorphism .backdrop-blur-xl,
+html.no-glassmorphism .backdrop-blur-2xl,
+html.no-glassmorphism .backdrop-blur-3xl,
+html.no-glassmorphism [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ── Subtle grid background for workspace ─────── */
+.workspace-grid-bg {
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+  background-color: var(--color-bg-primary);
+}
+
+.dark {
+  color-scheme: dark;
+  --color-bg-primary: #1A1A1A;
+  --color-bg-secondary: #242424;
+  --color-bg-glass: rgba(30, 30, 30, 0.72);
+  --color-text-primary: #E8E8E8;
+  --color-text-secondary: #A0A0A0;
+  --color-border: #3A3A3A;
+  --color-dai: #6B8FA8;
+  --color-dai-hover: #7BA3BE;
+}
+
+/* ── Dark mode overrides ─────────────────────── */
+.dark .workspace-grid-bg {
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  opacity: 0.7;
+}
+.dark select {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+.dark select option {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+.dark ::selection {
+  background: rgba(107, 143, 168, 0.35);
+}
+
+/* ── Selection ───────────────────────────────── */
+::selection {
+  background: rgba(74, 95, 111, 0.15);
+}
+
+/* ── Focus ring ──────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-dai);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
